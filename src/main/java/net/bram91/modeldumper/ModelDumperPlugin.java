@@ -68,9 +68,9 @@ import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.util.Text;
 
 @PluginDescriptor(
-	name = "Model Exporter",
-	description = "Allows exporting models by right clicking them.",
-	tags = {"Model", "Dumper","Exporter","3d","obj"}
+		name = "Model Exporter",
+		description = "Allows exporting models by right clicking them.",
+		tags = {"Model", "Dumper","Exporter","3d","obj"}
 )
 public class ModelDumperPlugin extends Plugin
 {
@@ -78,13 +78,13 @@ public class ModelDumperPlugin extends Plugin
 	private static final String EXPORT_MODEL = "Export Model";
 	private static final String MENU_TARGET = "Player";
 	private static final WidgetMenuOption FIXED_EQUIPMENT_TAB_EXPORT = new WidgetMenuOption(EXPORT_MODEL,
-		MENU_TARGET, WidgetInfo.FIXED_VIEWPORT_EQUIPMENT_TAB);
+			MENU_TARGET, WidgetInfo.FIXED_VIEWPORT_EQUIPMENT_TAB);
 	private static final WidgetMenuOption RESIZABLE_EQUIPMENT_TAB_EXPORT = new WidgetMenuOption(EXPORT_MODEL,
-		MENU_TARGET, WidgetInfo.RESIZABLE_VIEWPORT_EQUIPMENT_TAB);
+			MENU_TARGET, WidgetInfo.RESIZABLE_VIEWPORT_EQUIPMENT_TAB);
 	private static final WidgetMenuOption RESIZABLE_VIEWPORT_BOTTOM_LINE_INVENTORY_TAB_EXPORT = new WidgetMenuOption(EXPORT_MODEL,
-		MENU_TARGET,WidgetInfo.RESIZABLE_VIEWPORT_BOTTOM_LINE_INVENTORY_TAB);
+			MENU_TARGET,WidgetInfo.RESIZABLE_VIEWPORT_BOTTOM_LINE_INVENTORY_TAB);
 	private final ImmutableList<String> set = ImmutableList.of(
-		"Trade with", "Attack", "Talk-to", "Examine"
+			"Trade with", "Attack", "Talk-to", "Examine"
 	);
 	private static final DateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 
@@ -154,26 +154,26 @@ public class ModelDumperPlugin extends Plugin
 				if(target.getOption().equals("Trade with"))
 				{
 					client.createMenuEntry(0)
-						.setOption(EXPORT_MODEL)
-						.setTarget(entityName)
-						.setIdentifier(target.getIdentifier())
-						.onClick(this::exportPlayerModel);
+							.setOption(EXPORT_MODEL)
+							.setTarget(entityName)
+							.setIdentifier(target.getIdentifier())
+							.onClick(this::exportPlayerModel);
 				}
 				else if(target.getType().equals(MenuAction.EXAMINE_OBJECT))
 				{
 					client.createMenuEntry(0)
-						.setOption(EXPORT_MODEL)
-						.setTarget(entityName)
-						.setIdentifier(target.getIdentifier())
-						.onClick(this::exportObjectModel);
+							.setOption(EXPORT_MODEL)
+							.setTarget(entityName)
+							.setIdentifier(target.getIdentifier())
+							.onClick(this::exportObjectModel);
 				}
 				else if(target.getType().equals(MenuAction.NPC_FIRST_OPTION)||target.getType().equals(MenuAction.NPC_SECOND_OPTION)||target.getType().equals(MenuAction.NPC_THIRD_OPTION)||target.getType().equals((MenuAction.EXAMINE_NPC)))
 				{
 					client.createMenuEntry(0)
-						.setOption(EXPORT_MODEL)
-						.setTarget(entityName)
-						.setIdentifier(target.getIdentifier())
-						.onClick(this::exportNpcModel);
+							.setOption(EXPORT_MODEL)
+							.setTarget(entityName)
+							.setIdentifier(target.getIdentifier())
+							.onClick(this::exportNpcModel);
 				}
 				break;
 
@@ -183,13 +183,25 @@ public class ModelDumperPlugin extends Plugin
 
 	private void exportLocalPlayerModel(MenuEntry entry)
 	{
+		DateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
 		Player localPlayer = client.getLocalPlayer();
 		if (config.forceRestPose())
 		{
 			localPlayer.setAnimation(2566);
 			localPlayer.setAnimationFrame(0);
 		}
-		DateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+		else if (config.captureCompleteAnimation()){
+			try {
+				for (int i = 0; i < 1000; i ++){
+					localPlayer.setAnimationFrame(i);
+					String fileName = String.join("_", "Player-"+localPlayer.getName(), "Animation-"+ localPlayer.getAnimation(), "Frame-" + i);
+					OBJExporter.export(localPlayer.getModel(), fileName);
+				}
+			} catch(Exception e){
+				return;
+			}
+		}
+
 		OBJExporter.export(localPlayer.getModel(), "Player " + client.getLocalPlayer().getName() + " " + TIME_FORMAT.format(new Date()));
 	}
 
@@ -310,11 +322,11 @@ public class ModelDumperPlugin extends Plugin
 		Tile tile = itemSpawned.getTile();
 
 		final GroundItem groundItem = GroundItem.builder()
-			.id(item.getId())
-			.item(item)
-			.location(tile.getWorldLocation())
-			.quantity(item.getQuantity())
-			.build();
+				.id(item.getId())
+				.item(item)
+				.location(tile.getWorldLocation())
+				.quantity(item.getQuantity())
+				.build();
 
 		GroundItem existing = groundItems.get(tile.getWorldLocation(), item.getId());
 		if (existing != null)

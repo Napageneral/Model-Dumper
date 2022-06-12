@@ -32,10 +32,10 @@ import net.runelite.client.config.ConfigItem;
 public interface ModelDumperPluginConfig extends Config
 {
 	@ConfigItem(
-		keyName = "material",
-		name = "Export Color",
-		description = "Also export colors for the models.",
-		position = 1
+			keyName = "material",
+			name = "Export Color",
+			description = "Also export colors for the models.",
+			position = 1
 	)
 	default boolean material()
 	{
@@ -49,4 +49,12 @@ public interface ModelDumperPluginConfig extends Config
 			position = 2
 	)
 	default boolean forceRestPose() { return false; }
+
+	@ConfigItem(
+			keyName = "captureCompleteAnimation",
+			name = "Capture Every Frame Of Current Animation (Local Player)",
+			description = "Exports every frame of the current player animation as a separate model file.",
+			position = 3
+	)
+	default boolean captureCompleteAnimation() { return true; }
 }
