@@ -3,6 +3,7 @@ package net.bram91.modeldumper;
 import java.io.File;
 import net.runelite.api.Model;
 import net.runelite.api.Renderable;
+import net.runelite.api.SceneTileModel;
 import net.runelite.client.RuneLite;
 
 import java.awt.Color;
@@ -44,6 +45,24 @@ public class OBJExporter
             exportModel(m, name);
         }
 		catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+    }
+
+    public static void export(SceneTileModel tileModel, String name)
+    {
+        try
+        {
+            File folder = new File(PATH);
+
+            if (!folder.exists())
+            {
+                folder.mkdir();
+            }
+            exportTileModel(tileModel, name);
+        }
+        catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
@@ -134,6 +153,52 @@ public class OBJExporter
         mtl.flush();
         obj.close();
         mtl.close();
+    }
+
+    private static void exportTileModel(SceneTileModel m, String name) throws FileNotFoundException
+    {
+        if (m == null)
+            return;
+
+        name = name.replace(" ", "_");
+
+        // Open writers
+        PrintWriter obj = new PrintWriter(PATH + name + ".obj");
+        obj.println("# Made by RuneLite Model-Dumper Plugin");
+        obj.println("o " + name);
+
+
+        int[] xVertices = m.getVertexX();
+        int[] yVertices = m.getVertexY();
+        int[] zVertices = m.getVertexZ();
+
+        // Write vertices
+        for (int vi=0; vi < xVertices.length; ++vi)
+        {
+            // Y and Z axes are flipped
+            int vx = xVertices[vi];
+            int vy = yVertices[vi];
+            int vz = zVertices[vi];
+            obj.println("v " + vx + " " + vy + " " + vz);
+        }
+
+        int[] xFaceIndices = m.getFaceX();
+        int[] yFaceIndices = m.getFaceY();
+        int[] zFaceIndices = m.getFaceZ();
+        for (int fi=0; fi < xFaceIndices.length; ++fi)
+        {
+
+            // OBJ vertices are indexed by 1
+            int vi1 = xFaceIndices[fi] + 1;
+            int vi2 = yFaceIndices[fi] + 1;
+            int vi3 = zFaceIndices[fi] + 1;
+            obj.println("f " + vi1 + " " + vi2 + " " + vi3);
+
+        }
+
+        // flush output buffers
+        obj.flush();
+        obj.close();
     }
 
 }
