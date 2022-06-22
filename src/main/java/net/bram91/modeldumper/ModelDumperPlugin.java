@@ -49,13 +49,7 @@ import javax.inject.Inject;
 
 import net.runelite.api.*;
 import net.runelite.api.coords.WorldPoint;
-import net.runelite.api.events.ClientTick;
-import net.runelite.api.events.GameStateChanged;
-import net.runelite.api.events.ItemDespawned;
-import net.runelite.api.events.ItemQuantityChanged;
-import net.runelite.api.events.ItemSpawned;
-import net.runelite.api.events.MenuOpened;
-import net.runelite.api.events.NpcSpawned;
+import net.runelite.api.events.*;
 import net.runelite.api.widgets.WidgetInfo;
 import net.runelite.client.RuneLite;
 import net.runelite.client.callback.ClientThread;
@@ -76,6 +70,7 @@ public class ModelDumperPlugin extends Plugin
 {
 	private static ModelDumperPlugin instance;
 	private static final String EXPORT_MODEL = "Export Model";
+	private static final String EXPORT_TILE_MODEL = "Export Tile Model";
 	private static final String MENU_TARGET = "Player";
 	private static final WidgetMenuOption FIXED_EQUIPMENT_TAB_EXPORT = new WidgetMenuOption(EXPORT_MODEL,
 			MENU_TARGET, WidgetInfo.FIXED_VIEWPORT_EQUIPMENT_TAB);
@@ -87,6 +82,7 @@ public class ModelDumperPlugin extends Plugin
 			"Trade with", "Attack", "Talk-to", "Examine"
 	);
 	private static final DateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+	private static final String WALK_HERE = "Walk here";
 
 	@Inject
 	private Client client;
@@ -181,6 +177,45 @@ public class ModelDumperPlugin extends Plugin
 		}
 	}
 
+	@Subscribe
+	public void onMenuEntryAdded(MenuEntryAdded event)
+	{
+		final boolean hotKeyPressed = client.isKeyPressed(KeyCode.KC_SHIFT);
+		if (hotKeyPressed)
+		{
+
+			if (event.getOption().equals(WALK_HERE)){
+				final Tile selectedSceneTile = client.getSelectedSceneTile();
+
+				if (selectedSceneTile == null)
+				{
+					return;
+				}
+
+
+				client.createMenuEntry(-1)
+						.setOption(EXPORT_TILE_MODEL)
+						.setTarget(event.getTarget())
+						.setType(MenuAction.RUNELITE)
+						.onClick(e ->
+						{
+							Tile targetTile = client.getSelectedSceneTile();
+							if (targetTile != null)
+							{
+								exportTileModel(targetTile);
+							}
+						});
+			}
+
+			client.createMenuEntry(-1)
+					.setOption("Export Scene Models")
+					.setTarget(event.getTarget())
+					.setType(MenuAction.RUNELITE)
+					.onClick(this::exportSceneModels);
+
+		}
+	}
+
 	private void exportLocalPlayerModel(MenuEntry entry)
 	{
 		DateFormat TIME_FORMAT = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
@@ -261,6 +296,42 @@ public class ModelDumperPlugin extends Plugin
 				}
 			}
 		}
+	}
+
+	private void exportSceneModels(MenuEntry entry)
+	{
+		Scene scene = client.getScene();
+		Tile[][][] tiles = scene.getTiles();
+
+		int z = client.getPlane();
+		for (int x = 0; x < Constants.SCENE_SIZE; ++x)
+		{
+			for (int y = 0; y < Constants.SCENE_SIZE; ++y)
+			{
+				Tile tile = tiles[z][x][y];
+				if (tile != null)
+				{
+					SceneTileModel tileModel = tile.getSceneTileModel();
+					if (tileModel != null){
+						WorldPoint tileLocation = tile.getWorldLocation();
+						String tileString = "x-" + tileLocation.getX() + "y-" + tileLocation.getY() + "z-" + tileLocation.getPlane();
+						OBJExporter.export(tileModel, tileString);
+					}
+				}
+			}
+		}
+	}
+
+	private void exportTileModel(Tile tile)
+	{
+		SceneTileModel tileModel = tile.getSceneTileModel();
+
+		if (tileModel != null){
+			WorldPoint tileLocation = tile.getWorldLocation();
+			String tileString = "x-" + tileLocation.getX() + "y-" + tileLocation.getY() + "z-" + tileLocation.getPlane();
+			OBJExporter.export(tileModel, tileString);
+		}
+
 	}
 
 	private void exportNpcModel(MenuEntry entry)
